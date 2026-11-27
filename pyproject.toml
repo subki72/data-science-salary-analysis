@@ -1,0 +1,33 @@
+[project]
+name = "salary-analytics"
+version = "1.0.0"
+description = "Production SQLite & FastAPI analytics platform for global Data Science salary trends (2020-2022)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+extend-exclude = ["*.ipynb", ".venv", "venv", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "src"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
