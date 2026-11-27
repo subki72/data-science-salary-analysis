@@ -1,62 +1,116 @@
 # Data Science Salary Analysis (2020-2022)
 
-![Language](https://img.shields.io/badge/Language-Python%20%7C%20SQL-blue)
-![Tools](https://img.shields.io/badge/Tools-Jupyter%20%7C%20Pandas%20%7C%20Seaborn-green)
-![Status](https://img.shields.io/badge/Status-Completed-success)
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.136-009688)
+![SQLite](https://img.shields.io/badge/SQLite-Parameterized%20SQL-003B57)
+![CI](https://img.shields.io/badge/CI-Ruff%20%7C%20Pytest%20%7C%20Docker%20%7C%20Trivy-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## Project Overview
-This project aims to analyze the trends in Data Science salaries globally from 2020 to 2022. By utilizing a dataset of real-world salaries, this analysis provides insights into how factors such as **experience level**, **employment type**, **remote work ratio**, and **job titles** influence compensation in the tech industry.
 
-The project demonstrates a hybrid workflow, executing **SQL queries** directly within a Python environment to bridge the gap between database management and data visualization.
+This project analyzes global Data Science compensation trends from 2020 to 2022 using `ds_salaries.csv` (607 compensation records). It provides a **dual-mode analytical architecture**:
+
+1. **Interactive Notebook (`dsSalary.ipynb`)**: Exploratory SQL + Python workflow in Jupyter Notebook, patched to strip synthetic `Unnamed: 0` CSV index columns, close SQLite connections cleanly, and use Seaborn v0.14-compatible `hue`/`legend=False` barplots.
+2. **Production Analytics Package & FastAPI Service (`src/salary_analytics/` + `main.py`)**: Modular SQLite schema migrations (`migrations/001_init_salaries.sql`), strict CSV schema validation (`SalaryDataError`), parameterized SQL queries, headless PNG/Markdown/JSON reporting, CLI execution, and REST endpoints (`/health`, `/summary`, `/roles/top`, `/analyze`).
 
 ## Business Questions
-To guide the analysis, the following strategic questions were formulated:
-1.  **Salary Trend:** Is there a significant increase in salaries for data roles over the years?
-2.  **Experience Impact:** How does the salary scale progress from Entry-level to Executive roles?
-3.  **Remote Work Analysis:** Does working remotely (WFH) negatively or positively affect salary compared to office-based roles?
-4.  **Top Paying Roles:** Which specific job titles command the highest average salaries in the industry?
 
-## Tech Stack
-* **Language:** Python 3.9+
-* **Query Language:** SQL (SQLite)
-* **Libraries:**
-    * `pandas` (Data Manipulation)
-    * `sqlite3` (Database Connection)
-    * `matplotlib` & `seaborn` (Data Visualization)
-* **Environment:** Jupyter Notebook
+1. **Salary Trend:** How did average USD salaries for data roles evolve from 2020 to 2022?
+2. **Experience Impact:** How does compensation scale across Entry (`EN`), Mid (`MI`), Senior (`SE`), and Executive (`EX`) levels?
+3. **Remote Work Analysis:** How do WFO (`0`), Hybrid (`50`), and Full Remote (`100`) compensation averages compare?
+4. **Top Paying Roles:** Which job titles command the highest average salaries (filtered by `COUNT(*) >= 3` to avoid single-sample bias)?
 
-## Dataset
-The dataset used (`ds_salaries.csv`) contains the following key columns:
-* `work_year`: The year the salary was paid.
-* `experience_level`: EN (Entry), MI (Mid), SE (Senior), EX (Executive).
-* `job_title`: The role of the employee (e.g., Data Scientist, Data Engineer).
-* `salary_in_usd`: Salary converted to USD for uniform comparison.
-* `remote_ratio`: The amount of work done remotely (0, 50, 100).
+## Architecture
 
-## Key Findings
-Based on the SQL analysis and visualizations, here are the key takeaways:
+```text
+data-science-salary-analysis/
+├── dsSalary.ipynb                     # Patched exploratory SQL + Seaborn notebook
+├── ds_salaries.csv                    # Source dataset (607 rows)
+├── main.py                            # CLI & Uvicorn entrypoint (--health, --demo, --serve)
+├── migrations/
+│   └── 001_init_salaries.sql          # Normalized SQLite DDL, constraints & indexes
+├── src/salary_analytics/
+│   ├── config.py                      # Environment settings & structured logging
+│   ├── database.py                    # Context-managed SQLite ingestion & validation
+│   ├── queries.py                     # Parameterized SQL queries & typed dataclasses
+│   ├── reporting.py                   # Markdown, JSON & headless Agg Matplotlib charts
+│   └── api.py                         # FastAPI service (/health, /summary, /roles/top, /analyze)
+├── tests/                             # Offline unit & API integration tests
+├── docs/
+│   ├── runbook.md                     # Operational health & incident playbooks
+│   └── adr/001-sqlite-analytics-architecture.md
+├── Dockerfile                         # Multi-stage non-root Python 3.11 container
+├── docker-compose.yml                 # Local container runner
+└── Makefile                           # One-command lint, test, demo, and serve targets
+```
 
-* **Positive Market Trend:** There was a significant surge in average salaries in **2022**, indicating high demand for data professionals.
-* **Seniority Pays:** Moving from a Mid-level (MI) to a Senior-level (SE) role offers the most significant salary jump.
-* **Remote Work is Lucrative:** Surprisingly, fully remote positions (100% remote) tend to have a **higher average salary** compared to hybrid or on-site roles, likely due to competition from global tech companies.
-* **Top Roles:** Specialized roles such as *Principal Data Engineer* and *Data Architect* are among the highest-paid positions, outearning generalist roles.
+## Quickstart
 
-## How to Run This Project
-1.  Clone this repository:
-    ```bash
-    git clone [https://github.com/yourusername/data-science-salary-analysis.git](https://github.com/yourusername/data-science-salary-analysis.git)
-    ```
-2.  Install the required libraries:
-    ```bash
-    pip install pandas matplotlib seaborn
-    ```
-3.  Open the Jupyter Notebook:
-    ```bash
-    jupyter notebook "Portfolio_Project_DS_Salaries.ipynb"
-    ```
+### 1. Clone and Install
+```bash
+git clone https://github.com/subki72/data-science-salary-analysis.git
+cd data-science-salary-analysis
+python -m venv .venv
+source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+```
 
-##  Author
-**Muhammad Syafii Assubki**
+### 2. Run CLI Health Check & Offline Demo
+```bash
+python main.py --health
+python main.py --demo
+python main.py --demo --format json --output-json report.json --charts-dir reports/charts
+```
 
----
-*This project was created as part of my Data Science Portfolio to demonstrate proficiency in SQL and Python for Data Analysis.*
+### 3. Run FastAPI Service
+```bash
+python main.py --serve
+# Or via Makefile:
+make serve
+```
+Verify live endpoints:
+- `GET http://127.0.0.1:8000/health`
+- `GET http://127.0.0.1:8000/summary`
+- `GET http://127.0.0.1:8000/roles/top?min_samples=3&limit=5`
+- `POST http://127.0.0.1:8000/analyze`
+
+### 4. Run Automated Quality & Test Gates
+```bash
+make lint
+make test
+```
+
+### 5. Run Exploratory Notebook
+```bash
+jupyter notebook dsSalary.ipynb
+```
+
+### 6. Run with Docker
+```bash
+docker compose up --build
+```
+
+## Database Schema & Key Findings
+
+Key columns in `ds_salaries` (`migrations/001_init_salaries.sql`):
+- `work_year`: Payment year (`2020`, `2021`, `2022`), indexed via `idx_ds_salaries_work_year`.
+- `experience_level`: `EN`, `MI`, `SE`, `EX`, indexed via `idx_ds_salaries_experience_level`.
+- `remote_ratio`: `0` (WFO), `50` (Hybrid), `100` (Full Remote), indexed via `idx_ds_salaries_remote_ratio`.
+- `job_title`: Role title, indexed via `idx_ds_salaries_job_title`.
+- `salary_in_usd`: Standardized compensation in USD (`$2,859` to `$600,000`, overall average `$112,297.87`).
+
+Key insights across the 607 records:
+- **Positive Market Trend:** Average salaries climbed strongly in **2022** compared to 2020 and 2021.
+- **Seniority Scaling:** Transitioning from Mid-level (`MI`) to Senior-level (`SE`) and Executive (`EX`) yields the largest compensation step-up.
+- **Remote Compensation:** Full Remote (`100`) roles exhibit a higher average USD salary than Hybrid (`50`) and on-site (`0`) roles in this dataset.
+- **Top Specialized Roles:** Specialized roles meeting the `>= 3` sample filter (such as *Principal Data Engineer* and *Data Architect*) lead average USD compensation.
+
+## Stage 1 Remediation Notes
+
+- Added `.gitignore` excluding `.env`, virtual environments, caches, and runtime `.sqlite`/report artifacts while keeping `ds_salaries.csv` tracked.
+- Fixed `dsSalary.ipynb` Cell 2 (`Unnamed: 0` CSV index column dropped before `to_sql`, plus explicit `conn.close()` cleanup) and Cells 8, 10, 12 (explicit `hue` and `legend=False` for Seaborn v0.14 compatibility).
+- Fixed repository clone URL (`yourusername` -> `subki72`) and notebook reference (`dsSalary.ipynb`) in `README.md`.
+
+## Author & License
+
+**Muhammad Syafii Assubki** — Licensed under the [MIT License](LICENSE).
