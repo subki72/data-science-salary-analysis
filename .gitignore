@@ -1,0 +1,42 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+id_rsa
+secrets/
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# SQLite & Runtime Outputs (keep tracked ds_salaries.csv!)
+*.sqlite
+*.sqlite3
+*.db
+reports/
+artifacts/
+
+# Jupyter Checkpoints
+.ipynb_checkpoints/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
